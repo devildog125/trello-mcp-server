@@ -9,6 +9,9 @@ A Model Context Protocol (MCP) server that connects Trello with AI assistants li
 - ➕ Create new cards
 - 🔄 Move cards between lists
 - 💬 Add comments to cards
+- 📝 Get all comments on a card
+- ✏️ Update existing card comments
+- 🗑️ Delete card comments
 - 🗃️ Archive cards
 - 🔗 Access boards as MCP resources
 - 🐳 Docker support for easy deployment
@@ -259,6 +262,33 @@ Move the "Bug fix" card to the "In Progress" list
 Add a comment to the card saying "This needs urgent attention"
 ```
 
+### Get Card Comments
+
+```
+Show me all comments on card <card_id>
+```
+
+### Update a Comment
+
+```
+Update comment <comment_id> on card <card_id> to "Updated status: this is now blocked"
+```
+
+### Delete a Comment
+
+```
+Delete comment <comment_id> from card <card_id>
+```
+
+## Comment Tools
+
+The server supports the following comment-related tools:
+
+- `add_comment` - Add a new comment to a card (`cardId`, `text`)
+- `get_card_comments` - Get all comments on a card (`cardId`)
+- `update_comment` - Update an existing comment (`cardId`, `commentId`, `text`)
+- `delete_comment` - Delete a comment (`cardId`, `commentId`)
+
 ### Archive Cards
 
 ```
@@ -275,6 +305,9 @@ Archive the completed card "Setup database"
 | `create_card`      | Create a new card in a specific list       | `listId`, `name`, `desc` (optional) |
 | `move_card`        | Move a card to a different list            | `cardId`, `listId`                  |
 | `add_comment`      | Add a comment to a card                    | `cardId`, `text`                    |
+| `get_card_comments`| Get all comments from a card               | `cardId`                            |
+| `update_comment`   | Update an existing comment                 | `cardId`, `commentId`, `text`       |
+| `delete_comment`   | Delete a comment                           | `cardId`, `commentId`               |
 | `archive_card`     | Archive a card                             | `cardId`                            |
 | `archive_list`     | Archive a list                             | `listId`                            |
 | `delete_board`     | Delete a board                             | `boardId`                           |
