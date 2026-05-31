@@ -567,5 +567,135 @@ export function createToolHandlers(trello: TrelloApi) {
         };
       }
     },
+    async handleGetLabels(args: any) {
+      try {
+        const { boardId } = args;
+        if (!boardId) throw new Error("boardId is required");
+
+        const labels = await trello.get(`/boards/${boardId}/labels`, {
+          fields: "id,name,color",
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                labels.map((l: any) => ({ id: l.id, name: l.name, color: l.color })),
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleCreateLabel(args: any) {
+      try {
+        const { boardId, name, color } = args;
+        if (!boardId || !name) throw new Error("boardId and name are required");
+
+        const label = await trello.post(`/labels`, {
+          idBoard: boardId,
+          name,
+          ...(color ? { color } : {}),
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                { id: label.id, name: label.name, color: label.color },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleAddLabelToCard(args: any) {
+      try {
+        const { cardId, labelId } = args;
+        if (!cardId || !labelId) throw new Error("cardId and labelId are required");
+
+        await trello.post(`/cards/${cardId}/idLabels`, { value: labelId });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ added: true, cardId, labelId }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleRemoveLabelFromCard(args: any) {
+      try {
+        const { cardId, labelId } = args;
+        if (!cardId || !labelId) throw new Error("cardId and labelId are required");
+
+        await trello.delete(`/cards/${cardId}/idLabels/${labelId}`);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ removed: true, cardId, labelId }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
   };
 }

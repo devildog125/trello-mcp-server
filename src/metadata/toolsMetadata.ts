@@ -244,4 +244,77 @@ export const toolsMetadata = [
       required: ["cardId", "commentId"],
     },
   },
+  {
+    name: "get_labels",
+    description: "Get all labels defined on a board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        boardId: {
+          type: "string",
+          description: "ID of the board to retrieve labels from",
+        },
+      },
+      required: ["boardId"],
+    },
+  },
+  {
+    name: "create_label",
+    description: "Create a new label on a board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        boardId: {
+          type: "string",
+          description: "ID of the board to create the label on",
+        },
+        name: {
+          type: "string",
+          description: "Name of the label",
+        },
+        color: {
+          type: "string",
+          description:
+            "Color of the label. One of: yellow, purple, blue, red, green, orange, black, sky, pink, lime. Omit for no color.",
+        },
+      },
+      required: ["boardId", "name"],
+    },
+  },
+  {
+    name: "add_label_to_card",
+    description: "Add an existing label to a card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card",
+        },
+        labelId: {
+          type: "string",
+          description: "ID of the label to add",
+        },
+      },
+      required: ["cardId", "labelId"],
+    },
+  },
+  {
+    name: "remove_label_from_card",
+    description: "Remove a label from a card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card",
+        },
+        labelId: {
+          type: "string",
+          description: "ID of the label to remove",
+        },
+      },
+      required: ["cardId", "labelId"],
+    },
+  },
 ];

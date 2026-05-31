@@ -163,6 +163,18 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "delete_comment":
         result = await toolHandlers.handleDeleteComment(args);
         break;
+      case "get_labels":
+        result = await toolHandlers.handleGetLabels(args);
+        break;
+      case "create_label":
+        result = await toolHandlers.handleCreateLabel(args);
+        break;
+      case "add_label_to_card":
+        result = await toolHandlers.handleAddLabelToCard(args);
+        break;
+      case "remove_label_from_card":
+        result = await toolHandlers.handleRemoveLabelFromCard(args);
+        break;
 
       default:
         throw new Error(`Tool "${name}" is not implemented`);
