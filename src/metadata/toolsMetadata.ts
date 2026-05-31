@@ -176,4 +176,72 @@ export const toolsMetadata = [
       required: ["cardId", "name"],
     },
   },
+  {
+    name: "get_card",
+    description: "Get full details of a card including its description",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card to read",
+        },
+      },
+      required: ["cardId"],
+    },
+  },
+  {
+    name: "get_card_comments",
+    description: "Get all comments on a card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card to get comments from",
+        },
+      },
+      required: ["cardId"],
+    },
+  },
+  {
+    name: "update_comment",
+    description: "Update the text of an existing comment on a card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card the comment belongs to",
+        },
+        commentId: {
+          type: "string",
+          description: "ID of the comment to update",
+        },
+        text: {
+          type: "string",
+          description: "New text for the comment",
+        },
+      },
+      required: ["cardId", "commentId", "text"],
+    },
+  },
+  {
+    name: "delete_comment",
+    description: "Delete a comment from a card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card the comment belongs to",
+        },
+        commentId: {
+          type: "string",
+          description: "ID of the comment to delete",
+        },
+      },
+      required: ["cardId", "commentId"],
+    },
+  },
 ];

@@ -143,6 +143,18 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "update_card_name":
         result = await toolHandlers.handleUpdateCardName(args);
         break;
+      case "get_card":
+        result = await toolHandlers.handleGetCard(args);
+        break;
+      case "get_card_comments":
+        result = await toolHandlers.handleGetCardComments(args);
+        break;
+      case "update_comment":
+        result = await toolHandlers.handleUpdateComment(args);
+        break;
+      case "delete_comment":
+        result = await toolHandlers.handleDeleteComment(args);
+        break;
 
       default:
         throw new Error(`Tool "${name}" is not implemented`);

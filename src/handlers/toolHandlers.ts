@@ -415,5 +415,157 @@ export function createToolHandlers(trello: TrelloApi) {
         };
       }
     },
+    async handleGetCard(args: any) {
+      try {
+        const { cardId } = args;
+        if (!cardId) throw new Error("cardId is required");
+
+        const card = await trello.get(`/cards/${cardId}`, {
+          fields: "id,name,desc,idList,idBoard,url,closed",
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  id: card.id,
+                  name: card.name,
+                  description: card.desc,
+                  listId: card.idList,
+                  boardId: card.idBoard,
+                  url: card.url,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleGetCardComments(args: any) {
+      try {
+        const { cardId } = args;
+        if (!cardId) throw new Error("cardId is required");
+
+        const actions = await trello.get(`/cards/${cardId}/actions`, {
+          filter: "commentCard",
+        });
+
+        const comments = actions.map((action: any) => ({
+          commentId: action.id,
+          text: action.data.text,
+          author: action.memberCreator?.fullName ?? action.idMemberCreator,
+          date: action.date,
+        }));
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(comments, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleUpdateComment(args: any) {
+      try {
+        const { cardId, commentId, text } = args;
+        if (!cardId || !commentId || !text)
+          throw new Error("cardId, commentId, and text are required");
+
+        const updated = await trello.put(
+          `/cards/${cardId}/actions/${commentId}/comments`,
+          { text }
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  commentId: updated.id,
+                  text: updated.data.text,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleDeleteComment(args: any) {
+      try {
+        const { cardId, commentId } = args;
+        if (!cardId || !commentId)
+          throw new Error("cardId and commentId are required");
+
+        await trello.delete(
+          `/cards/${cardId}/actions/${commentId}/comments`
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ deleted: true, commentId }, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
   };
 }
