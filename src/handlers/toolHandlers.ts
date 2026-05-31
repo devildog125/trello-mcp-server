@@ -1,5 +1,51 @@
 import { TrelloApi } from "../api/trelloApi";
 
+interface CardInput {
+  listId: string;
+  name: string;
+  desc?: string;
+}
+
+interface MoveInput {
+  cardId: string;
+  listId: string;
+}
+
+interface CommentInput {
+  cardId: string;
+  text: string;
+}
+
+interface LabelInput {
+  boardId: string;
+  name: string;
+  color?: string;
+}
+
+interface LabelAssignment {
+  cardId: string;
+  labelId: string;
+}
+
+type BatchResult<T> =
+  | { status: "fulfilled"; index: number; value: T }
+  | { status: "rejected"; index: number; reason: string };
+
+function formatBatchResults<T>(
+  settled: PromiseSettledResult<T>[],
+  getValue: (v: T) => unknown
+): BatchResult<unknown>[] {
+  return settled.map((r, i) =>
+    r.status === "fulfilled"
+      ? { status: "fulfilled", index: i, value: getValue(r.value) }
+      : {
+          status: "rejected",
+          index: i,
+          reason: r.reason instanceof Error ? r.reason.message : String(r.reason),
+        }
+  );
+}
+
 export function createToolHandlers(trello: TrelloApi) {
   return {
     async handleListBoards() {
@@ -699,20 +745,20 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleGetLists(args: any) {
       try {
-        const { boardId } = args;
+        const { boardId } = args as { boardId: string };
         if (!boardId) throw new Error("boardId is required");
 
         const lists = await trello.get(`/boards/${boardId}/lists`, {
-          fields: "id,name,closed",
+          fields: "id,name",
+          filter: "open",
         });
-        const openLists = lists.filter((list: any) => !list.closed);
 
         return {
           content: [
             {
               type: "text",
               text: JSON.stringify(
-                openLists.map((list: any) => ({
+                lists.map((list: { id: string; name: string }) => ({
                   id: list.id,
                   name: list.name,
                 })),
@@ -738,15 +784,15 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleCreateCards(args: any) {
       try {
-        const { cards } = args;
+        const { cards } = args as { cards: CardInput[] };
         if (!cards || !Array.isArray(cards) || cards.length === 0)
           throw new Error("cards array is required");
 
-        const results = await Promise.all(
-          cards.map(async (card: any) => {
+        const settled = await Promise.allSettled(
+          cards.map(async (card: CardInput, index: number) => {
             const { listId, name, desc = "" } = card;
             if (!listId || !name)
-              throw new Error("Each card must have listId and name");
+              throw new Error(`Card at index ${index} must have listId and name`);
             const created = await trello.post("/cards", {
               idList: listId,
               name,
@@ -755,6 +801,8 @@ export function createToolHandlers(trello: TrelloApi) {
             return { id: created.id, url: created.url, name: created.name };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
@@ -780,19 +828,21 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleMoveCards(args: any) {
       try {
-        const { moves } = args;
+        const { moves } = args as { moves: MoveInput[] };
         if (!moves || !Array.isArray(moves) || moves.length === 0)
           throw new Error("moves array is required");
 
-        const results = await Promise.all(
-          moves.map(async (move: any) => {
+        const settled = await Promise.allSettled(
+          moves.map(async (move: MoveInput, index: number) => {
             const { cardId, listId } = move;
             if (!cardId || !listId)
-              throw new Error("Each move must have cardId and listId");
+              throw new Error(`Move at index ${index} must have cardId and listId`);
             await trello.put(`/cards/${cardId}`, { idList: listId });
             return { moved: true, cardId, listId };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
@@ -818,15 +868,15 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleAddComments(args: any) {
       try {
-        const { comments } = args;
+        const { comments } = args as { comments: CommentInput[] };
         if (!comments || !Array.isArray(comments) || comments.length === 0)
           throw new Error("comments array is required");
 
-        const results = await Promise.all(
-          comments.map(async (comment: any) => {
+        const settled = await Promise.allSettled(
+          comments.map(async (comment: CommentInput, index: number) => {
             const { cardId, text } = comment;
             if (!cardId || !text)
-              throw new Error("Each comment must have cardId and text");
+              throw new Error(`Comment at index ${index} must have cardId and text`);
             const created = await trello.post(
               `/cards/${cardId}/actions/comments`,
               { text }
@@ -834,6 +884,8 @@ export function createToolHandlers(trello: TrelloApi) {
             return { commentId: created.id, text: created.data.text };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
@@ -859,15 +911,15 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleCreateLabels(args: any) {
       try {
-        const { labels } = args;
+        const { labels } = args as { labels: LabelInput[] };
         if (!labels || !Array.isArray(labels) || labels.length === 0)
           throw new Error("labels array is required");
 
-        const results = await Promise.all(
-          labels.map(async (label: any) => {
+        const settled = await Promise.allSettled(
+          labels.map(async (label: LabelInput, index: number) => {
             const { boardId, name, color } = label;
             if (!boardId || !name)
-              throw new Error("Each label must have boardId and name");
+              throw new Error(`Label at index ${index} must have boardId and name`);
             const created = await trello.post(`/labels`, {
               idBoard: boardId,
               name,
@@ -876,6 +928,8 @@ export function createToolHandlers(trello: TrelloApi) {
             return { id: created.id, name: created.name, color: created.color };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
@@ -901,19 +955,21 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleAddLabels(args: any) {
       try {
-        const { assignments } = args;
+        const { assignments } = args as { assignments: LabelAssignment[] };
         if (!assignments || !Array.isArray(assignments) || assignments.length === 0)
           throw new Error("assignments array is required");
 
-        const results = await Promise.all(
-          assignments.map(async (assignment: any) => {
+        const settled = await Promise.allSettled(
+          assignments.map(async (assignment: LabelAssignment, index: number) => {
             const { cardId, labelId } = assignment;
             if (!cardId || !labelId)
-              throw new Error("Each assignment must have cardId and labelId");
+              throw new Error(`Assignment at index ${index} must have cardId and labelId`);
             await trello.post(`/cards/${cardId}/idLabels`, { value: labelId });
             return { added: true, cardId, labelId };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
@@ -939,20 +995,20 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleGetTicketsByList(args: any) {
       try {
-        const { listId } = args;
+        const { listId } = args as { listId: string };
         if (!listId) throw new Error("listId is required");
 
         const cards = await trello.get(`/lists/${listId}/cards`, {
-          fields: "id,name,desc,idList,url,closed",
+          fields: "id,name,desc,idList,url",
+          filter: "open",
         });
-        const openCards = cards.filter((card: any) => !card.closed);
 
         return {
           content: [
             {
               type: "text",
               text: JSON.stringify(
-                openCards.map((card: any) => ({
+                cards.map((card: { id: string; name: string; desc: string; url: string }) => ({
                   id: card.id,
                   name: card.name,
                   description: card.desc,
@@ -980,16 +1036,19 @@ export function createToolHandlers(trello: TrelloApi) {
     },
     async handleArchiveCards(args: any) {
       try {
-        const { cardIds } = args;
+        const { cardIds } = args as { cardIds: string[] };
         if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0)
           throw new Error("cardIds array is required");
 
-        const results = await Promise.all(
-          cardIds.map(async (cardId: string) => {
+        const settled = await Promise.allSettled(
+          cardIds.map(async (cardId: string, index: number) => {
+            if (!cardId) throw new Error(`Card ID at index ${index} is required`);
             await trello.put(`/cards/${cardId}`, { closed: true });
             return { archived: true, cardId };
           })
         );
+
+        const results = formatBatchResults(settled, (v) => v);
 
         return {
           content: [
