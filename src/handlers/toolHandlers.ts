@@ -999,7 +999,7 @@ export function createToolHandlers(trello: TrelloApi) {
         if (!listId) throw new Error("listId is required");
 
         const cards = await trello.get(`/lists/${listId}/cards`, {
-          fields: "id,name,desc,idList,url",
+          fields: "id,name,desc,url",
           filter: "open",
         });
 
