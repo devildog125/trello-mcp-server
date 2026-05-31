@@ -317,4 +317,323 @@ export const toolsMetadata = [
       required: ["cardId", "labelId"],
     },
   },
+  {
+    name: "get-boards",
+    description: "Get all open Trello boards for the authenticated user",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "get-lists",
+    description: "Get all open lists on a specific Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        boardId: {
+          type: "string",
+          description: "ID of the board to get lists from",
+        },
+      },
+      required: ["boardId"],
+    },
+  },
+  {
+    name: "create-card",
+    description: "Create a new card in a specific list on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        listId: {
+          type: "string",
+          description: "ID of the list to create the card in",
+        },
+        name: {
+          type: "string",
+          description: "Name of the card",
+        },
+        desc: {
+          type: "string",
+          description: "Description of the card (optional)",
+        },
+      },
+      required: ["listId", "name"],
+    },
+  },
+  {
+    name: "create-cards",
+    description:
+      "Create multiple cards in one or more lists on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cards: {
+          type: "array",
+          description: "Array of card objects to create",
+          items: {
+            type: "object",
+            properties: {
+              listId: {
+                type: "string",
+                description: "ID of the list to create the card in",
+              },
+              name: {
+                type: "string",
+                description: "Name of the card",
+              },
+              desc: {
+                type: "string",
+                description: "Description of the card (optional)",
+              },
+            },
+            required: ["listId", "name"],
+          },
+        },
+      },
+      required: ["cards"],
+    },
+  },
+  {
+    name: "move-card",
+    description: "Move a card to a different list on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card to move",
+        },
+        listId: {
+          type: "string",
+          description: "ID of the target list",
+        },
+      },
+      required: ["cardId", "listId"],
+    },
+  },
+  {
+    name: "move-cards",
+    description: "Move multiple cards to different lists on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        moves: {
+          type: "array",
+          description: "Array of move operations",
+          items: {
+            type: "object",
+            properties: {
+              cardId: {
+                type: "string",
+                description: "ID of the card to move",
+              },
+              listId: {
+                type: "string",
+                description: "ID of the target list",
+              },
+            },
+            required: ["cardId", "listId"],
+          },
+        },
+      },
+      required: ["moves"],
+    },
+  },
+  {
+    name: "add-comment",
+    description: "Add a comment to a Trello card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card to add a comment to",
+        },
+        text: {
+          type: "string",
+          description: "Comment text",
+        },
+      },
+      required: ["cardId", "text"],
+    },
+  },
+  {
+    name: "add-comments",
+    description: "Add comments to multiple Trello cards",
+    inputSchema: {
+      type: "object",
+      properties: {
+        comments: {
+          type: "array",
+          description: "Array of comment objects to add",
+          items: {
+            type: "object",
+            properties: {
+              cardId: {
+                type: "string",
+                description: "ID of the card to add a comment to",
+              },
+              text: {
+                type: "string",
+                description: "Comment text",
+              },
+            },
+            required: ["cardId", "text"],
+          },
+        },
+      },
+      required: ["comments"],
+    },
+  },
+  {
+    name: "create-label",
+    description: "Create a new label on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        boardId: {
+          type: "string",
+          description: "ID of the board to create the label on",
+        },
+        name: {
+          type: "string",
+          description: "Name of the label",
+        },
+        color: {
+          type: "string",
+          description:
+            "Color of the label. One of: yellow, purple, blue, red, green, orange, black, sky, pink, lime. Omit for no color.",
+        },
+      },
+      required: ["boardId", "name"],
+    },
+  },
+  {
+    name: "create-labels",
+    description: "Create multiple labels on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        labels: {
+          type: "array",
+          description: "Array of label objects to create",
+          items: {
+            type: "object",
+            properties: {
+              boardId: {
+                type: "string",
+                description: "ID of the board to create the label on",
+              },
+              name: {
+                type: "string",
+                description: "Name of the label",
+              },
+              color: {
+                type: "string",
+                description:
+                  "Color of the label. One of: yellow, purple, blue, red, green, orange, black, sky, pink, lime. Omit for no color.",
+              },
+            },
+            required: ["boardId", "name"],
+          },
+        },
+      },
+      required: ["labels"],
+    },
+  },
+  {
+    name: "add-label",
+    description: "Add an existing label to a Trello card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card",
+        },
+        labelId: {
+          type: "string",
+          description: "ID of the label to add",
+        },
+      },
+      required: ["cardId", "labelId"],
+    },
+  },
+  {
+    name: "add-labels",
+    description: "Add multiple labels to one or more Trello cards",
+    inputSchema: {
+      type: "object",
+      properties: {
+        assignments: {
+          type: "array",
+          description: "Array of card-label assignments",
+          items: {
+            type: "object",
+            properties: {
+              cardId: {
+                type: "string",
+                description: "ID of the card",
+              },
+              labelId: {
+                type: "string",
+                description: "ID of the label to add",
+              },
+            },
+            required: ["cardId", "labelId"],
+          },
+        },
+      },
+      required: ["assignments"],
+    },
+  },
+  {
+    name: "get-tickets-by-list",
+    description:
+      "Get all cards (tickets) in a specific list on a Trello board",
+    inputSchema: {
+      type: "object",
+      properties: {
+        listId: {
+          type: "string",
+          description: "ID of the list to get cards from",
+        },
+      },
+      required: ["listId"],
+    },
+  },
+  {
+    name: "archive-card",
+    description: "Archive (close) a Trello card",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardId: {
+          type: "string",
+          description: "ID of the card to archive",
+        },
+      },
+      required: ["cardId"],
+    },
+  },
+  {
+    name: "archive-cards",
+    description: "Archive (close) multiple Trello cards",
+    inputSchema: {
+      type: "object",
+      properties: {
+        cardIds: {
+          type: "array",
+          description: "Array of card IDs to archive",
+          items: {
+            type: "string",
+            description: "ID of a card to archive",
+          },
+        },
+      },
+      required: ["cardIds"],
+    },
+  },
 ];

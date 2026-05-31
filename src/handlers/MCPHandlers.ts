@@ -175,6 +175,51 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "remove_label_from_card":
         result = await toolHandlers.handleRemoveLabelFromCard(args);
         break;
+      case "get-boards":
+        result = await toolHandlers.handleListBoards();
+        break;
+      case "get-lists":
+        result = await toolHandlers.handleGetLists(args);
+        break;
+      case "create-card":
+        result = await toolHandlers.handleCreateCard(args);
+        break;
+      case "create-cards":
+        result = await toolHandlers.handleCreateCards(args);
+        break;
+      case "move-card":
+        result = await toolHandlers.handleMoveCard(args);
+        break;
+      case "move-cards":
+        result = await toolHandlers.handleMoveCards(args);
+        break;
+      case "add-comment":
+        result = await toolHandlers.handleAddComment(args);
+        break;
+      case "add-comments":
+        result = await toolHandlers.handleAddComments(args);
+        break;
+      case "create-label":
+        result = await toolHandlers.handleCreateLabel(args);
+        break;
+      case "create-labels":
+        result = await toolHandlers.handleCreateLabels(args);
+        break;
+      case "add-label":
+        result = await toolHandlers.handleAddLabelToCard(args);
+        break;
+      case "add-labels":
+        result = await toolHandlers.handleAddLabels(args);
+        break;
+      case "get-tickets-by-list":
+        result = await toolHandlers.handleGetTicketsByList(args);
+        break;
+      case "archive-card":
+        result = await toolHandlers.handleArchiveCard(args);
+        break;
+      case "archive-cards":
+        result = await toolHandlers.handleArchiveCards(args);
+        break;
 
       default:
         throw new Error(`Tool "${name}" is not implemented`);

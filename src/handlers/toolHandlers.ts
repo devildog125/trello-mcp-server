@@ -697,5 +697,321 @@ export function createToolHandlers(trello: TrelloApi) {
         };
       }
     },
+    async handleGetLists(args: any) {
+      try {
+        const { boardId } = args;
+        if (!boardId) throw new Error("boardId is required");
+
+        const lists = await trello.get(`/boards/${boardId}/lists`, {
+          fields: "id,name,closed",
+        });
+        const openLists = lists.filter((list: any) => !list.closed);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                openLists.map((list: any) => ({
+                  id: list.id,
+                  name: list.name,
+                })),
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleCreateCards(args: any) {
+      try {
+        const { cards } = args;
+        if (!cards || !Array.isArray(cards) || cards.length === 0)
+          throw new Error("cards array is required");
+
+        const results = await Promise.all(
+          cards.map(async (card: any) => {
+            const { listId, name, desc = "" } = card;
+            if (!listId || !name)
+              throw new Error("Each card must have listId and name");
+            const created = await trello.post("/cards", {
+              idList: listId,
+              name,
+              desc,
+            });
+            return { id: created.id, url: created.url, name: created.name };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleMoveCards(args: any) {
+      try {
+        const { moves } = args;
+        if (!moves || !Array.isArray(moves) || moves.length === 0)
+          throw new Error("moves array is required");
+
+        const results = await Promise.all(
+          moves.map(async (move: any) => {
+            const { cardId, listId } = move;
+            if (!cardId || !listId)
+              throw new Error("Each move must have cardId and listId");
+            await trello.put(`/cards/${cardId}`, { idList: listId });
+            return { moved: true, cardId, listId };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleAddComments(args: any) {
+      try {
+        const { comments } = args;
+        if (!comments || !Array.isArray(comments) || comments.length === 0)
+          throw new Error("comments array is required");
+
+        const results = await Promise.all(
+          comments.map(async (comment: any) => {
+            const { cardId, text } = comment;
+            if (!cardId || !text)
+              throw new Error("Each comment must have cardId and text");
+            const created = await trello.post(
+              `/cards/${cardId}/actions/comments`,
+              { text }
+            );
+            return { commentId: created.id, text: created.data.text };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleCreateLabels(args: any) {
+      try {
+        const { labels } = args;
+        if (!labels || !Array.isArray(labels) || labels.length === 0)
+          throw new Error("labels array is required");
+
+        const results = await Promise.all(
+          labels.map(async (label: any) => {
+            const { boardId, name, color } = label;
+            if (!boardId || !name)
+              throw new Error("Each label must have boardId and name");
+            const created = await trello.post(`/labels`, {
+              idBoard: boardId,
+              name,
+              ...(color ? { color } : {}),
+            });
+            return { id: created.id, name: created.name, color: created.color };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleAddLabels(args: any) {
+      try {
+        const { assignments } = args;
+        if (!assignments || !Array.isArray(assignments) || assignments.length === 0)
+          throw new Error("assignments array is required");
+
+        const results = await Promise.all(
+          assignments.map(async (assignment: any) => {
+            const { cardId, labelId } = assignment;
+            if (!cardId || !labelId)
+              throw new Error("Each assignment must have cardId and labelId");
+            await trello.post(`/cards/${cardId}/idLabels`, { value: labelId });
+            return { added: true, cardId, labelId };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleGetTicketsByList(args: any) {
+      try {
+        const { listId } = args;
+        if (!listId) throw new Error("listId is required");
+
+        const cards = await trello.get(`/lists/${listId}/cards`, {
+          fields: "id,name,desc,idList,url,closed",
+        });
+        const openCards = cards.filter((card: any) => !card.closed);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                openCards.map((card: any) => ({
+                  id: card.id,
+                  name: card.name,
+                  description: card.desc,
+                  url: card.url,
+                })),
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+    async handleArchiveCards(args: any) {
+      try {
+        const { cardIds } = args;
+        if (!cardIds || !Array.isArray(cardIds) || cardIds.length === 0)
+          throw new Error("cardIds array is required");
+
+        const results = await Promise.all(
+          cardIds.map(async (cardId: string) => {
+            await trello.put(`/cards/${cardId}`, { closed: true });
+            return { archived: true, cardId };
+          })
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(results, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
   };
 }
